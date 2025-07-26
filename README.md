@@ -35,7 +35,3 @@ nextflow run wes-som/main.nf \
 
 ---
 
-### Recommended Next Steps:
-1. **Add a workflow diagram**:
-   ```markdown
-   ![Pipeline](assets/wes-som_workflow.png)
