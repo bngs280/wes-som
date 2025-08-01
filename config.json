@@ -1,0 +1,12 @@
+{
+    "genome": "hg19",
+    "platform": "Illumina",
+    "library": "Paired",
+    "outdir": "/usr/src/app/output",
+    "data_dir": "/usr/src/app/input",
+    "skip_processes": ["MSI", "TMB", "SV", "CNV", "MT"],
+    "mode": "TumorOnly",
+    "tumerType": "'Lung Adenocarcinoma'",
+    "resume": true
+}
+
