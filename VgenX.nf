@@ -447,239 +447,26 @@ workflow {
 
 
 // Process to validate FASTQ files using validate_fastq.py
-process validateFastqPE {
-    tag "${sample_id}_InputValidation (Paired-End)"
 
-    input:
-    tuple val(sample_id), path(read_pairs_pe)
-
-    output:
-    tuple val(sample_id), path(read_pairs_pe), emit: validated_samplesPE
-
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastqPE.py --input1 ${read_pairs_pe[0]} --input2 ${read_pairs_pe[1]}
-
-    """
-}
 // Process to validate Single FASTQ files using validate_fastq.py
-process validateFastqSE {
-    tag "${sample_id}_InputValidation (Single-End)"
 
-    input:
-    tuple val(sample_id), path(read_pairs_se)
-
-    output:
-    tuple val(sample_id), path(read_pairs_se), emit: validated_samplesSE
-
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastqSE.py --input ${read_pairs_se} 
-
-    """
-}
 // Process to validate Single FASTQ files using validate_fastq.py
-process validateFastqONT {
-    tag "${sample_id}_InputValidation (ONT)"
 
-    input:
-    tuple val(sample_id), path(read_pairs_se)
 
-    output:
-    tuple val(sample_id), path(read_pairs_se), emit: validated_samplesONT
 
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastqSE.py --input ${read_pairs_se} 
 
-    """
-}
-process quality_check {
-    tag "Quality Checking on ${sample_id}"
-    publishDir "${params.outdir}/1.QC", mode: 'copy'
 
-    input:
-    tuple val(sample_id), path(read_files)
-
-    output:
-    path "${sample_id}", emit: fastqc_out
-
-    script:
-    """
-    mkdir ${sample_id}
-    fastqc -o ${sample_id} -f fastq -q ${read_files}
-    """
-}
-process quality_checkONT {
-    tag "Quality Checking on ${sample_id} (ONT)"
-    publishDir "${params.outdir}/1.QC", mode: 'copy'
-
-    input:
-    tuple val(sample_id), path(read_files)
-
-    output:
-    path "${sample_id}", emit: fastqc_ont_out
-
-    script:
-    """
-    mkdir ${sample_id}
-    NanoPlot --fastq ${read_files} -o ${sample_id}
-    """
-}
-
-process trim_ONT {
-    tag "Trimming on ${sample_id} (ONT)"
-    publishDir "${params.outdir}/2.Trimmed", mode: 'copy'
-
-    input:
-    tuple val(sample_id), path(read_pairs_se)
-
-    output:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz"), emit: filt_out_ont
-
-    when:
-    params.platform == 'Nanopore' && params.library == 'Single'
-
-    script:
-    """
-    gunzip -c ${read_pairs_se} | NanoFilt -q 10 -l 500 --headcrop 40 --tailcrop 20 | gzip > ${sample_id}_trimmed.fastq.gz
-    """
-}
 
 // Process to validate FASTQ files using validate_fastq.py
-process validateTrimmedOutONT {
-    tag "${sample_id}_TrimmedOutSEvalidation (ONT)"
 
-    input:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz")
-
-    output:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz"), emit: filt_out_validatedONT
-
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastp_outSE.py --input ${sample_id}_trimmed.fastq.gz
-    """
-}
-process trim_paired {
-    tag "Trimming on ${sample_id} (Paired-End)"
-    publishDir "${params.outdir}/2.Trimmed", mode: 'copy'
-
-    input:
-    tuple val(sample_id), path(read_pairs_pe)
-
-    output:
-    tuple val(sample_id), path("${sample_id}_R1_trimmed.fastq.gz"), path("${sample_id}_R2_trimmed.fastq.gz"), emit: fastp_out_pe, path("${sample_id}_fastp.html")
-
-    when:
-    params.platform == 'Illumina' || params.platform == 'BGI' || params.platform == 'MGI' && params.library == 'Paired' 
-    
-    script:
-    """
-    fastp --detect_adapter_for_pe -q 20 \
-          -i ${read_pairs_pe[0]} \
-          -I ${read_pairs_pe[1]} \
-          -o ${sample_id}_R1_trimmed.fastq.gz \
-          -O ${sample_id}_R2_trimmed.fastq.gz \
-          --html ${sample_id}_fastp.html \
-          --report_title "Quality Control for ${sample_id}"
-    """
-}
-// Process to validate FASTQ files using validate_fastq.py
-process validateTrimmedOutPE {
-    tag "${sample_id}_TrimmedOutPEvalidation"
-
-    input:
-    tuple val(sample_id), path("${sample_id}_trimmed_R1.fastq.gz"), path("${sample_id}_trimmed_R2.fastq.gz")
-
-    output:
-    tuple val(sample_id), path("${sample_id}_trimmed_R1.fastq.gz"), path("${sample_id}_trimmed_R2.fastq.gz"), emit: fastp_out_validatedPE
-
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastp_outPE.py --input1 ${sample_id}_trimmed_R1.fastq.gz --input2 ${sample_id}_trimmed_R2.fastq.gz
-    """
-}
-
-process trim_single {
-    tag "Trimming on ${sample_id} (Single-End)"
-    publishDir "${params.outdir}/2.Trimmed", mode: 'copy'
-
-    input:
-    tuple val(sample_id), path(read_pairs_se)
-
-    output:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz"), emit: fastp_out_se, path("${sample_id}_fastp.html")
-
-    when:
-    params.platform == 'Illumina' || params.platform == 'BGI' || params.platform == 'MGI' || params.platform == 'ThermoFisher' && params.library == 'Single'
-
-    script:
-    """
-    fastp -q 20 \
-          -i ${read_pairs_se} \
-          -o ${sample_id}_trimmed.fastq.gz \
-          --html ${sample_id}_fastp.html \
-          --report_title "Quality Control for ${sample_id}"
-    """
-}
 
 // Process to validate FASTQ files using validate_fastq.py
-process validateTrimmedOutSE {
-    tag "${sample_id}_TrimmedOutSEvalidation"
 
-    input:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz")
 
-    output:
-    tuple val(sample_id), path("${sample_id}_trimmed.fastq.gz"), emit: fastp_out_validatedSE
 
-    script:
-    """
-    python3 /usr/src/app/ref17/Validation_script/validate_fastp_outSE.py --input ${sample_id}_trimmed.fastq.gz
-    """
-}
-process quality_checkTN {
-    tag "QCTN on ${tumor_id} vs ${normal_id}"
-    publishDir "${params.outdir}/QCTN", mode: 'copy'
-    input:
-    tuple val(tumor_id), path(tumor_fastq1), path(tumor_fastq2),
-          val(normal_id), path(normal_fastq1), path(normal_fastq2)
-    
-    output:
-    path "${tumor_id}_${normal_id}", emit: fastqc_outTN
 
-    when:
-    (params.platform == 'Illumina' || params.platform == 'BGI' || params.platform == 'MGI') && params.library == 'Paired' && params.mode == 'TumorNormal'
-    
-    script:
-    """
-    mkdir ${tumor_id}_${normal_id}
-    fastqc -o ${tumor_id}_${normal_id} -f fastq -q ${tumor_fastq1} ${tumor_fastq2} ${normal_fastq1} ${normal_fastq2}
-    """
-}
 
-process fastpTumorNormal {
-    tag "FASTP on ${tumor_id} vs ${normal_id}"
-    publishDir "${params.outdir}/TrimmingTN", mode: 'copy'
 
-    input:
-    tuple val(tumor_id), path(tumor_fastq1), path(tumor_fastq2), 
-          val(normal_id), path(normal_fastq1), path(normal_fastq2)
-
-    output:
-    tuple val(tumor_id), path("${tumor_id}_trimmed_R1.fastq.gz"), path("${tumor_id}_trimmed_R2.fastq.gz"),
-          val(normal_id), path("${normal_id}_trimmed_R1.fastq.gz"), path("${normal_id}_trimmed_R2.fastq.gz"), path("${tumor_id}_fastp.html"), path("${normal_id}_fastp.html"), emit: trimmed_fastqs_tn
-
-    when:
-    (params.platform == 'Illumina' || params.platform == 'BGI' || params.platform == 'MGI') && params.library == 'Paired' && params.mode == 'TumorNormal'
-
-    script:
-    """
-    fastp -q 20 -i ${tumor_fastq1} -I ${tumor_fastq2} -o ${tumor_id}_trimmed_R1.fastq.gz -O ${tumor_id}_trimmed_R2.fastq.gz --html ${tumor_id}_fastp.html --report_title "Quality Control for ${tumor_id}"
-    fastp -q 20 -i ${normal_fastq1} -I ${normal_fastq2} -o ${normal_id}_trimmed_R1.fastq.gz -O ${normal_id}_trimmed_R2.fastq.gz --html ${normal_id}_fastp.html --report_title "Quality Control for ${normal_id}"
-    """
-}
 
 process align_tumor_normal {
     tag "Alignment of ${tumor_id} vs ${normal_id}"
@@ -693,8 +480,8 @@ process align_tumor_normal {
     val(params.ref)
 
     output:
-    tuple val(tumor_id), path("${tumor_id}_sorted.bam"),
-          val(normal_id), path("${normal_id}_sorted.bam"), emit: sorted_bams_tn
+    tuple val(tumor_id), path("${tumor_id}.sorted.md.bam"),
+          val(normal_id), path("${normal_id}.sorted.md.bam"), emit: sorted_bams_tn
     when:
     (params.platform == 'Illumina' || params.platform == 'BGI' || params.platform == 'MGI') && params.library == 'Paired' && params.mode == 'TumorNormal'
 
@@ -704,11 +491,15 @@ process align_tumor_normal {
     bwa mem -t ${task.cpus} -M \
             -R "@RG\\tID:${tumor_id}\\tPL:ILLUMINA\\tPM:HISEQ\\tSM:${tumor_id}" \
             ${params.ref} ${tumor_fastq1} ${tumor_fastq2} | samtools view -@ ${task.cpus} -b - | samtools sort -o ${tumor_id}_sorted.bam
+    sambamba markdup -r -t ${task.cpus} ${tumor_id}_sorted.bam ${tumor_id}.sorted.md.bam 
+    samtools index ${tumor_id}.sorted.md.bam 
 
     # Align normal FASTQ
     bwa mem -t ${task.cpus} -M \
             -R "@RG\\tID:${normal_id}\\tPL:ILLUMINA\\tPM:HISEQ\\tSM:${normal_id}" \
             ${params.ref} ${normal_fastq1} ${normal_fastq2} | samtools view -@ ${task.cpus} -b - | samtools sort -o ${normal_id}_sorted.bam
+    sambamba markdup -r -t ${normal_id}_sorted.bam ${normal_id}.sorted.md.bam 
+    samtools index ${normal_id}.sorted.md.bam 
     """
 }
 
