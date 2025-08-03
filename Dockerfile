@@ -1,16 +1,3 @@
-# Use an official Python runtime as a parent image
-## final Dockerfile to build docker image
-## version: 1.2
-## Date: 18/10/2024
-## last update: 25/10/2024
-## last update: 29/10/2024
-## last update: 20/11/2024 and workd
-## last worked: 09/01/2025
-## last worked: 04/02/2025
-## worked with skip proccess, if faild any proccess, with security till VEP
-
-
-
 ##Download
 ## LoFtool_scores.txt
 ## environmenttmb.yml
@@ -35,7 +22,7 @@ RUN apt-get clean \
         make \
         unzip \
         curl \
-	awscli \
+	    awscli \
         tzdata \
         git \
         bcftools \
@@ -153,10 +140,7 @@ RUN chmod +x picard.jar
 # Install GATK 4.5.00
 RUN wget https://github.com/broadinstitute/gatk/releases/download/4.5.0.0/gatk-4.5.0.0.zip -O gatk4500.zip && \
     unzip gatk4500.zip
-
 COPY LoFtool_scores.txt /usr/src/app/ensembl-vep/Plugins/
-
-
 # Install msisensor2
 RUN git clone https://github.com/niu-lab/msisensor2.git && \
     cd msisensor2 && \
@@ -166,7 +150,6 @@ RUN git clone https://github.com/niu-lab/msisensor2.git && \
 RUN git clone https://github.com/bioinfo-pf-curie/TMB.git
 COPY environmenttmb.yml /tmp/
 RUN conda env create -f /tmp/environmenttmb.yml
-
 # Install MANTA
 COPY p2manta.yml /tmp/
 RUN conda env create -f /tmp/p2manta.yml
@@ -214,29 +197,14 @@ WORKDIR /usr/src/app
 RUN mkdir Validation_script
 RUN apt-get update && apt-get install -y jq
 
+COPY main.nf /usr/src/app
 
-#COPY icgeb15012025.nf /usr/src/app # for original validation
-COPY VgenX.nf /usr/src/app
-
-#COPY nextflow.config /usr/src/app
 # Make port 80 available to the world outside this container
 EXPOSE 80
 # Define environment variable
-ENV NAME rgenx
-# Add Delly to PATH
-#ENV PATH="/opt/delly/bin:${PATH}"
-# Set entrypoint to use Snakemake
-#ENTRYPOINT ["snakemake"]
+ENV NAME wessom
 
-# Default command that runs if no other command is specified
-#CMD ["all", "--cores", "5"]
-#ENV GPG_PASSPHRASE=10xl8$nhuUms340#rby7
-# Default command: decrypt, run, re-encrypt, and clean up
 CMD bash -c "\
-#gpg --batch --yes --passphrase '$GPG_PASSPHRASE' -o main_securing3rd.nf -d main_securing3rd.nf.gpg && \
 nextflow -log /usr/src/app/output/pipeline.log run VgenX.nf -c nextflow.config -params-file config.json -with-report /usr/src/app/output/pipeline_report -with-dag /usr/src/app/output/pipeline_DAG.png -with-trace /usr/src/app/output/pipeline_trace.txt -with-timeline /usr/src/app/output/pipeline_timeline.html && \
 chmod -R 777 /usr/src/app/output"
-#nextflow -log /usr/src/app/output/pipeline.log run VgenX.nf -c nextflow.config -params-file config.json -work-dir /usr/src/app/work -with-report /usr/src/app/output/pipeline_report -with-dag /usr/src/app/output/pipeline_DAG.png -with-trace /usr/src/app/output/pipeline_trace.txt -with-timeline /usr/src/app/output/pipeline_timeline.html && \
 
-#gpg --batch --yes --passphrase '$GPG_PASSPHRASE' --symmetric --cipher-algo AES256 -o main_securing3rd.nf.gpg main_securing3rd.nf && \
-#rm main_securing3rd.nf"
