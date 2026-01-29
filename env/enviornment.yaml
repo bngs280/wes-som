@@ -1,0 +1,56 @@
+name: wessom
+channels:
+  - bioconda
+  - conda-forge
+  - nodefaults  # Avoid conflicts
+dependencies:
+  # Core NGS alignment & processing
+  - bwa
+  - samtools=1.19
+  - bcftools=1.19
+  - htslib=1.19
+  - bedtools=2.30.0
+
+  # Variant calling & annotation
+  - gatk4=4.5.0.0
+  - picard=3.0.0  # Updated from 2.27.1
+  - vcf2maf=1.6.21
+
+  # QC & preprocessing
+  - fastp=0.23.4
+  - multiqc=1.23
+
+  # ONT/Nano specific (NanoCaller deps + tools)
+  - minimap2=2.26
+  - nanoplot=1.43.0
+  - nanofilt=1.4.0
+
+  # MSI analysis
+  - msisensor2=0.6.2
+  - mantis=1.0.4  # MANTIS for MSI
+
+  # VEP (Ensembl Variant Effect Predictor)
+  - ensembl-vep=112  # Latest stable; adjust as needed
+
+  # CNV analysis (CONTRA dependencies; CONTRA itself via tarball)
+  - r-base=4.3.3
+  - r-essentials
+  - bioconductor-limma  # Common CONTRA dep
+  - python=3.9.19
+  - numpy=1.24.4
+  - pandas=2.1.4
+  - pysam=0.22.1
+  - intervaltree=3.1.0
+  - xlsxwriter=3.2.0
+  - tensorflow=2.15.0
+  - pip
+  - pip:
+      - einops==0.7.0
+      - local_attention==1.0.0
+
+  # Perl/BioPerl for VEP/legacy
+  - perl-bioperl=1.7.8
+  - perl-archive-zip=1.68  # VEP dep
+
+  # Additional utilities
+  - hdf5=1.14.3
