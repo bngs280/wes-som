@@ -58,7 +58,7 @@ EXPOSE 80
 ENV NAME wessom
 
 CMD bash -c "\
-    nextflow -log /usr/src/app/output/pipeline.log run VgenX.nf -c nextflow.config -params-file config.json \
+    nextflow -log /usr/src/app/output/pipeline.log run main.nf -c nextflow.config -params-file config.json \
     -with-report /usr/src/app/output/pipeline_report \
     -with-dag /usr/src/app/output/pipeline_DAG.png \
     -with-trace /usr/src/app/output/pipeline_trace.txt \

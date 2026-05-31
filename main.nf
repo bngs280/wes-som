@@ -2,7 +2,7 @@
 // last update: 2/12/2024
 // workd till error intergation
 // sudo ~/nextflow run main.nf -params-file config.json
-// sudo docker run -v /home/ubuntu/Doc/nf/input:/usr/src/app/input -v /home/ubuntu/Doc/nf/outputSec:/usr/src/app/output -v /home/ubuntu/Doc/nf/nextflow.config:/usr/src/app/nextflow.config -v /home/ubuntu/Doc/nf/config.json:/usr/src/app/config.json rgenxtools:latest
+// sudo docker run -v /home/ubuntu/Doc/nf/input:/usr/src/app/input -v /home/ubuntu/Doc/nf/outputSec:/usr/src/app/output -v /home/ubuntu/Doc/nf/nextflow.config:/usr/src/app/nextflow.config -v /home/ubuntu/Doc/nf/config.json:/usr/src/app/config.json wes_som:latest
 // nextflow run main.nf -with-docker -with-report 1main_1_6_report -with-dag 1main_1_6_DAG.png -with-trace 1main_1_6_trace.txt -with-timeline  1main_1_6_timeline.html
 // last update: 21/01/2025 , can generate file with vcf data as well worked for tum_norm mode but tum_norm mode vcf file not consuming by annotation proccess propelry, you have to furtehr wrk on this
 // last update: 04022025 worked with tum-norm, TMB, MSI, CNV, SV
@@ -27,10 +27,10 @@ def reset = "\033[0m"
 println """
 ${bold}${cyan}============================================================
     WELCOME TO THE WES ONCOLOGY PIPELINE!
-    Presented by: ${yellow}VGENOMICS INDIA PVT LTD${cyan}
+    Presented by: ${yellow} Deepak ${cyan}
 ============================================================
    Cutting-edge genomic analysis for precision oncology.
-   Powered by ${green}VgenX CLI${cyan} 
+   Powered by ${green}WES SOMATIC CLI${cyan} 
 ============================================================${reset}
 """
 
@@ -1862,96 +1862,13 @@ workflow.onComplete = {
     // Stylish outro message with start and end times
     println """
     ${bold}${green}============================================================
-         Thank you for using VgenX CLI - A WES Oncology Pipeline!
+         Thank you for using WES SOMATIC CLI - A WES Oncology Pipeline!
     ============================================================
  
     ============================================================
     Your analysis is complete.
-    For support, please contact ${yellow}support@vgenomics.co.in${green}.
+    For support, please contact ${yellow}d6803148@gmail.com${green}.
     ============================================================${reset}
     """
 
 }
-/*
-// Capture the end time
-def endTime = LocalDateTime.now()
-def formattedEndTime = endTime.format(dateFormat)
-
-// Stylish outro message with start and end times
-println """
-${bold}${green}============================================================
-         Thank you for using VgenX CLI - A WES Oncology Pipeline!
-============================================================
- 
-  End Time  : ${yellow}${formattedEndTime}${green}
-============================================================
-  Your analysis is complete.
-  For support, please contact ${yellow}support@vgenomics.co.in${green}.
-============================================================${reset}
-"""
-End Time  : ${yellow}${formattedEndTime}${green}
-
-
-annotVUS_vcfs = annotationVUS(final_vcfs, params.cachee, params.dirplugin, params.ref, params.assembly, params.dbNSFP, params.loftool, params.CADDsnv, params.dbscSNV, params.MaxEnt)
-annotVUS_proce = vusprizePre(annotVUS_vcfs)
-process annotationVUS {
-    tag "VUS Pre-Proccessing on ${sample_id}"
-    publishDir "${params.outdir}/16.VUS", mode: 'copy'
-    cpus 4
-
-    input:
-    tuple val(sample_id), path(vcf)
-    val(params.ref)
-    val(params.cachee)
-    val(params.dirplugin)
-    val(params.dbNSFP)
-    val(params.loftool)
-    val(params.CADDsnv)
-    val(params.dbscSNV)
-    val(params.assembly)
-    val(params.MaxEnt)
-
-    output:
-    tuple val(sample_id), path("${sample_id}_filtered_PASS_annotVUS.txt"), emit: annotVUS_vcfs
-
-    script:
-    """
-    /usr/src/app/ensembl-vep/./vep --af --appris --buffer_size 500 --cache --check_existing \
-    --distance 5000 --database --offline \
-    --assembly ${params.assembly} \
-    --fasta ${params.ref} \
-    --dir ${params.cachee} \
-    --dir_plugins ${params.dirplugin} \
-    --mane --pick \
-    --fasta_dir ${params.ref} --force --fork 4 \
-    --input_file ${vcf} \
-    --output_file ${sample_id}_filtered_PASS_annotVUS.txt --tab \
-    --plugin  MaxEntScan,${params.MaxEnt} \
-    --plugin Blosum62 \
-    --plugin dbNSFP,${params.dbNSFP},codon_degeneracy,Eigen-phred_coding,integrated_fitCons_score,GERP++_RS,phyloP100way_vertebrate \
-    --plugin dbscSNV,${params.dbscSNV} \
-    --plugin LoFtool,${params.loftool} \
-    --plugin CADD,snv=${params.CADDsnv} \
-    --refseq --quiet --regulatory -sift s --species homo_sapiens --symbol --transcript_version --tsl --safe \
-    --show_ref_allele --stats_text --uploaded_allele
-    """
-}
-
-process vusprizePre {
-    tag "VUS Pre-Proccessing on ${sample_id}"
-    publishDir "${params.outdir}/16.VUS", mode: 'copy'
-    cpus 4
-
-    input:
-    tuple val(sample_id), path("${sample_id}_filtered_PASS_annotVUS.txt")
-
-    output:
-    tuple val(sample_id), path("${sample_id}_filtered_PASS_annotVUS_proccessed.tsv"), emit: annotVUS_proce
-
-    script:
-    """
-    python /usr/src/app/ref17/Validation_script/vep_vusprize.py --input ${sample_id}_filtered_PASS_annotVUS.txt --output ${sample_id}_filtered_PASS_annotVUS_proccessed.tsv
-   
-    """
-}
-*/
